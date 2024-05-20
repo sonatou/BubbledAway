@@ -4,42 +4,48 @@ using UnityEngine;
 
 public class RayEnemyBehaviour : MonoBehaviour
 {
+    [Header("References")]
     [SerializeField] private Rigidbody2D playerRb;
-    private Vector2 playerDirection;
+    [SerializeField] private GameObject searchRay;
+    [SerializeField] private GameObject deathRay;
 
-    private LineRenderer lineRenderer;
+    [Header("Variables")]
+    [SerializeField] private float timeOfSearch = 3f;
+    [SerializeField] private float timeOfCharge = 2f;
+    [SerializeField] private float timeOfDeathRay = 2f;
+
+
+    private bool findingPlayer = true;
+
 
     private void Start()
     {
-        lineRenderer = GetComponent<LineRenderer>();
-        lineRenderer.startWidth = 0.1f;
-        lineRenderer.endWidth = 0.1f;
-        lineRenderer.material.color = Color.red;
-
-        StartCoroutine(ShootCoroutine());
+        StartCoroutine(ShootRayCoroutine());
     }
-    void Update()
+
+    private void Update()
     {
-        Vector2 playerPos = playerRb.position;
-        playerDirection = new Vector2(playerPos.x - transform.position.x, playerPos.y - transform.position.y);
-        transform.up = playerDirection;
+        if (playerRb != null && findingPlayer)
+        {
+            Vector2 playerPos = playerRb.position;
+            Vector2 direction = new Vector2(playerPos.x - transform.position.x, playerPos.y - transform.position.y);
+            transform.up = direction;
+        }
     }
 
-    IEnumerator ShootCoroutine()
+    IEnumerator ShootRayCoroutine()
     {
         while (true)
         {
-           
-            yield return new WaitForSeconds(4f);
-            Debug.DrawRay(transform.position, playerDirection, Color.red,100f);
-            RaycastHit2D hit = Physics2D.Raycast(transform.position, playerDirection, Mathf.Infinity, LayerMask.GetMask("Player"));
-
-            Vector3 endPoint = hit ? hit.point : transform.position;
-
-            // Atualizar a posição da linha
-            lineRenderer.SetPosition(0, transform.position);
-            lineRenderer.SetPosition(1, endPoint);
-
+            searchRay.SetActive(true);
+            yield return new WaitForSeconds(timeOfSearch);
+            findingPlayer = false;
+            searchRay.SetActive(false);
+            yield return new WaitForSeconds(timeOfCharge);
+            deathRay.SetActive(true);
+            yield return new WaitForSeconds(timeOfDeathRay);
+            findingPlayer = true;
+            deathRay.SetActive(false);           
         }
     }
 }

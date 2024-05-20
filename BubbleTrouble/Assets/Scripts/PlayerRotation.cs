@@ -9,6 +9,8 @@ public class PlayerRotation : MonoBehaviour
     [SerializeField] private Rigidbody2D playerRb;
     [SerializeField] private float force = 1f;
     [SerializeField] private float maxForce = 15f;
+    [SerializeField] private float minForce = 4f;
+
     private KeyCode shootKey = KeyCode.Mouse0;
 
     // Update is called once per frame
@@ -24,7 +26,7 @@ public class PlayerRotation : MonoBehaviour
         {
             force += Time.deltaTime * 4;
         }
-        if (Input.GetKeyUp(shootKey) || force >= maxForce)
+        if (Input.GetKeyUp(shootKey) && force >= minForce || force >= maxForce)
         {
             playerRb.AddForce(transform.up * force, ForceMode2D.Impulse);
             force = 1f;
@@ -34,6 +36,15 @@ public class PlayerRotation : MonoBehaviour
     private void OnCollisionEnter2D(Collision2D collision)
     {
         if (collision.gameObject.CompareTag("Wall"))
+        {
+            Destroy(gameObject);
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        }
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.gameObject.CompareTag("EnemyRay"))
         {
             Destroy(gameObject);
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
