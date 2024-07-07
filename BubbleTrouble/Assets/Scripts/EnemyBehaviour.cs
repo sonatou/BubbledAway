@@ -6,11 +6,12 @@ public class EnemyBehaviour : MonoBehaviour
 {
     [SerializeField] private Rigidbody2D playerRb;
     [SerializeField] private GameObject enemyBubble;
+    [SerializeField] private float shootInterval = 4f;
+    [SerializeField] private float bubbleForce = 1f;
 
-    private void Start()
-    {
-        StartCoroutine(ShootCoroutine());
-    }
+    private bool isPlayerInRange = false;
+    private Coroutine shootCoroutine;
+
     void Update()
     {
         if(playerRb != null)
@@ -20,16 +21,43 @@ public class EnemyBehaviour : MonoBehaviour
             transform.up = direction;
         }
     }
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.gameObject.CompareTag("Player"))
+        {
+            isPlayerInRange = true;
+            if (shootCoroutine == null)
+            {
+                shootCoroutine = StartCoroutine(ShootCoroutine());
+            }
+        }
+    }
 
-    IEnumerator ShootCoroutine()
+    private void OnTriggerExit2D(Collider2D other)
+    {
+        if (other.gameObject.CompareTag("Player"))
+        {
+            isPlayerInRange = false;
+            if (shootCoroutine != null)
+            {
+                StopCoroutine(shootCoroutine);
+                shootCoroutine = null;
+            }
+        }
+    }
+
+    private IEnumerator ShootCoroutine()
     {
         while (true)
         {
-            yield return new WaitForSeconds(4f);
-            Vector2 playerPos = playerRb.position;
-            Vector2 direction = new Vector2(playerPos.x - transform.position.x, playerPos.y - transform.position.y);
-            GameObject bubble = Instantiate(enemyBubble, transform.position, Quaternion.identity);
-            bubble.GetComponent<Rigidbody2D>().AddForce(direction * 0.5f, ForceMode2D.Impulse);
+            yield return new WaitForSeconds(shootInterval);
+            if (isPlayerInRange)
+            {
+                Vector2 playerPos = playerRb.position;
+                Vector2 direction = playerPos - (Vector2)transform.position;
+                GameObject bubble = Instantiate(enemyBubble, transform.position, Quaternion.identity);
+                bubble.GetComponent<Rigidbody2D>().AddForce(direction * bubbleForce, ForceMode2D.Impulse);
+            }
         }
     }
 }
